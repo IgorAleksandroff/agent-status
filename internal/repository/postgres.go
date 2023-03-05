@@ -11,39 +11,6 @@ import (
 )
 
 const (
-	queryCreateTables = `	
-		CREATE TYPE modes AS ENUM (
-			'MAN',
-			'AUT'
-		);
-		CREATE TABLE IF NOT EXISTS statuses (
-			id INT PRIMARY KEY,
-			name VARCHAR(64) NOT NULL UNIQUE
-		);
-		CREATE TABLE IF NOT EXISTS agents (
-			login VARCHAR(64) PRIMARY KEY,
-			password VARCHAR(128) NOT NULL,
-			status_id INT REFERENCES statuses(id),
-			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-		);
-		CREATE TABLE IF NOT EXISTS transitions (
-			id SERIAL NOT NULL,
-			status_id INT REFERENCES statuses(id),
-			mode modes NOT NULL,
-			permitted_ids int[] NOT NULL,
-		  CONSTRAINT transitions_pk
-        PRIMARY KEY (status_id, mode)
-		);
-		CREATE TABLE IF NOT EXISTS transitions_log (
-			id SERIAL PRIMARY KEY,
-			agent_login VARCHAR(64) REFERENCES statuses(id),
-			old_status_id INT REFERENCES statuses(id),
-			new_status_id INT REFERENCES statuses(id),
-			mode modes NOT NULL,
-			processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-		);
-	`
-
 	querySaveUser = `INSERT INTO agents (login, password, status_id) VALUES ($1, $2, $3)
 		ON CONFLICT (login) DO NOTHING`
 	queryGetUser = `SELECT login, password, status_id, created_at FROM agents WHERE login = $1`
