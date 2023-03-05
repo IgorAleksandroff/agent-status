@@ -11,8 +11,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-//go:generate mockery --name Authorization
-//go:generate mockery --name AuthorizationRepository
+//go:generate mockery --name Authorization --with-expecter
+//go:generate mockery --name AuthorizationRepository --with-expecter
 
 const (
 	salt     = "hjjrhjqw134617ajfhajs"

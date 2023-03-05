@@ -7,6 +7,7 @@ import (
 	"github.com/IgorAleksandroff/agent-status/internal/config"
 	"github.com/IgorAleksandroff/agent-status/internal/repository"
 	"github.com/IgorAleksandroff/agent-status/internal/service"
+	"github.com/IgorAleksandroff/agent-status/internal/usecase"
 )
 
 func main() {
@@ -28,7 +29,9 @@ func main() {
 		}
 	}()
 
-	app, err := service.New(ctx, cfg.)
+	auth := usecase.NewAuthorization(repo)
+
+	app, err := service.New(cfg.ServerConfig, auth)
 	if err != nil {
 		log.Fatalf("failed to create: %s", err)
 	}

@@ -20,10 +20,10 @@ const (
 type (
 	config struct {
 		DataBaseURI string
-		serverConfig
+		ServerConfig
 	}
 
-	serverConfig struct {
+	ServerConfig struct {
 		Host       string
 		GRPSSocket string
 	}
@@ -37,7 +37,7 @@ func GetConfig() config {
 
 	cfg := config{
 		DataBaseURI: getEnvString(DataBaseAddressEnv, *DBFlag),
-		serverConfig: serverConfig{
+		ServerConfig: ServerConfig{
 			Host:       getEnvString(ServerAddressEnv, *hostFlag),
 			GRPSSocket: getEnvString(ServerGRPSSocketEnv, *socketFlag),
 		},
