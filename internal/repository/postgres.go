@@ -28,11 +28,12 @@ const (
 			id SERIAL NOT NULL,
 			status_id INT REFERENCES statuses(id),
 			mode modes NOT NULL,
-			department_ids int[] NOT NULL,
+			permitted_ids int[] NOT NULL,
 		  CONSTRAINT transitions_pk
         PRIMARY KEY (status_id, mode)
 		);
 		CREATE TABLE IF NOT EXISTS transitions_log (
+			id SERIAL PRIMARY KEY,
 			agent_login VARCHAR(64) REFERENCES statuses(id),
 			old_status_id INT REFERENCES statuses(id),
 			new_status_id INT REFERENCES statuses(id),
@@ -60,6 +61,7 @@ func NewPostgres(ctx context.Context, addressDB string) (*pgRepo, error) {
 	return &repo, nil
 }
 
+// todo сделать через миграции
 func (p *pgRepo) init(ctx context.Context) error {
 	_, err := p.db.ExecContext(ctx, queryCreateTables)
 	if err != nil {
