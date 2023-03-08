@@ -2,55 +2,84 @@ package repository
 
 const (
 	queryCreateTables = `	
-		CREATE TYPE modes AS ENUM (
+	CREATE TYPE status_names AS ENUM (
 			'MAN',
 			'AUT'
-		);
-		CREATE TABLE IF NOT EXISTS statuses (
-			id INT PRIMARY KEY,
-			name VARCHAR(64) NOT NULL UNIQUE
-		);
-		CREATE TABLE IF NOT EXISTS agents (
+	);
+	CREATE TYPE modes AS ENUM (
+		'active',
+			'request to inactive',
+			'inactive',
+			'request to break',
+			'break',
+			'force majeure',
+			'chat',
+			'letter'
+	);
+	CREATE TABLE IF NOT EXISTS statuses (
+			name status_names PRIMARY KEY,
+			name_ru VARCHAR(64) NOT NULL UNIQUE
+	);
+	CREATE TABLE IF NOT EXISTS agents (
 			login VARCHAR(64) PRIMARY KEY,
 			password VARCHAR(128) NOT NULL,
-			status_id INT REFERENCES statuses(id),
+			status INT REFERENCES statuses(name),
 			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-		);
-		CREATE TABLE IF NOT EXISTS transitions (
-			id SERIAL NOT NULL,
-			status_id INT REFERENCES statuses(id),
-			mode modes[] NOT NULL,
-			permitted_ids int[] NOT NULL,
-		  CONSTRAINT transitions_pk
-        PRIMARY KEY (status_id, mode)
-		);
-		CREATE TABLE IF NOT EXISTS transitions_log (
+	);
+	CREATE TABLE IF NOT EXISTS transitions (
 			id SERIAL PRIMARY KEY,
-			agent_login VARCHAR(64) REFERENCES statuses(id),
-			old_status_id INT REFERENCES statuses(id),
-			new_status_id INT REFERENCES statuses(id),
+			source INT REFERENCES statuses(name),
+			destination int NOT NULL,
+			mode modes NOT NULL,
+		CONSTRAINT transitions_pk
+	PRIMARY KEY (source, destination, mode)
+	);
+	CREATE TABLE IF NOT EXISTS transitions_log (
+			id SERIAL PRIMARY KEY,
+			agent_login VARCHAR(64) REFERENCES agents(login),
+			source INT REFERENCES statuses(name),
+			destination INT REFERENCES statuses(name),
 			mode modes NOT NULL,
 			processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-		);
-
-	INSERT INTO statuses (id, name)
-			VALUES (1, 'начало смены'),
-							(2, 'запрос на завершение смены'),
-							(3, 'завершение смены'),
-							(4, 'запрос на перерыв'),
-							(5, 'перерыв'),
-							(6, 'форс-мажор'),
-							(7, 'работа с чатами'),
-							(8, 'работа с письмами');
-
-		INSERT INTO transitions (status_id, mode, permitted_ids)
-		VALUES (1, ['MAN', 'AUT'], [2,7,8]),
-						(2, ['AUT'], [3]),
-						(3, ['MAN', 'AUT'], [1]),
-						(7, ['MAN', 'AUT'], [6,2,4]),
-						(6, ['MAN', 'AUT'], [1]),
-						(4, ['AUT'], [5]),
-						(5, ['MAN', 'AUT'], [3,7,8]),
-						(8, ['MAN', 'AUT'], [6,2,4]);
-	`
+	);INSERT INTO statuses (name, name_ru)
+	VALUES ('active', 'начало смены'),
+			('request to inactive', 'запрос на завершение смены'),
+			('inactive', 'завершение смены'),
+			('request to break', 'запрос на перерыв'),
+			('break', 'перерыв'),
+			('force majeure', 'форс-мажор'),
+			('chat', 'работа с чатами'),
+			('letter', 'работа с письмами');
+	
+	INSERT INTO transitions (source, destination, mode)
+	VALUES ('active', 'request to inactive', 'AUT'),
+			('active', 'chat', 'AUT'),
+			('active', 'letter', 'AUT'),
+			('request to inactive', 'inactive', 'AUT'),
+			('inactive', 'active', 'AUT'),
+			('chat', 'force majeure', 'AUT'),
+			('chat', 'request to inactive', 'AUT'),
+			('chat', 'request to break', 'AUT'),
+			('force majeure', 'active', 'AUT'),
+			('request to break', 'break', 'AUT'),
+			('break', 'inactive', 'AUT'),
+			('break', 'chat', 'AUT'),
+			('break', 'letter', 'AUT'),
+			('letter', 'force majeure', 'AUT'),
+			('letter', 'request to inactive', 'AUT'),
+			('letter', 'request to break', 'AUT'),
+			('active', 'chat', 'MAN'),
+			('active', 'letter', 'MAN'),
+			('inactive', 'active', 'MAN'),
+			('chat', 'force majeure', 'MAN'),
+			('chat', 'request to inactive', 'MAN'),
+			('chat', 'request to break', 'MAN'),
+			('force majeure', 'active', 'MAN'),
+			('break', 'inactive', 'MAN'),
+			('break', 'chat', 'MAN'),
+			('break', 'letter', 'MAN'),
+			('letter', 'force majeure', 'MAN'),
+			('letter', 'request to inactive', 'MAN'),
+			('letter', 'request to break', 'MAN');
+`
 )

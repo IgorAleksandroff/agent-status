@@ -21,6 +21,7 @@ const (
 )
 
 var ErrUserLogin = errors.New("invalid password or login")
+var ErrUserPassword = errors.New("invalid password")
 
 type authService struct {
 	repo UserRepository
@@ -47,8 +48,14 @@ func NewAuthorization(repo UserRepository) *authService {
 }
 
 func (s *authService) CreateUser(ctx context.Context, user entity.Agent) error {
-	user.Password = generatePasswordHash(user.Password)
-	user.StatusID = entity.StatusActive
+	if user.Password == nil {
+		return ErrUserPassword
+	}
+	password := generatePasswordHash(*user.Password)
+	user.Password = &password
+
+	status := entity.StatusActive
+	user.Status = &status
 
 	return s.repo.SaveUser(ctx, user)
 }
@@ -58,7 +65,7 @@ func (s *authService) GenerateToken(ctx context.Context, username, password stri
 	if err != nil {
 		return "", err
 	}
-	if user.Password != generatePasswordHash(password) {
+	if user.Password == nil || *user.Password != generatePasswordHash(password) {
 		return "", ErrUserLogin
 	}
 

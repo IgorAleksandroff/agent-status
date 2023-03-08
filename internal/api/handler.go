@@ -7,7 +7,8 @@ import (
 )
 
 type handler struct {
-	auth usecase.Authorization
+	auth     usecase.Authorization
+	statusUC usecase.Status
 }
 
 type handlerFunc interface {
@@ -16,9 +17,11 @@ type handlerFunc interface {
 
 func New(
 	auth usecase.Authorization,
+	status usecase.Status,
 ) *handler {
 	return &handler{
-		auth: auth,
+		auth:     auth,
+		statusUC: status,
 	}
 }
 

@@ -30,8 +30,9 @@ func main() {
 	}()
 
 	auth := usecase.NewAuthorization(repo)
+	statusUC := usecase.NewStatus(repo)
 
-	app, err := service.New(cfg.ServerConfig, auth)
+	app, err := service.New(cfg.ServerConfig, auth, statusUC)
 	if err != nil {
 		log.Fatalf("failed to create: %s", err)
 	}

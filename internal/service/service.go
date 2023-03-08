@@ -39,20 +39,22 @@ type gzipWriter struct {
 	Writer io.Writer
 }
 
-func New(cfg config.ServerConfig, auth usecase.Authorization) (*server, error) {
+func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Status) (*server, error) {
 	// init HTTP server
 	r := chi.NewRouter()
 
 	r.Use(gzipUnzip)
 	r.Use(gzipHandle)
 
-	restHandler := api.New(auth)
+	restHandler := api.New(auth, status)
 
 	restHandler.Register(r, http.MethodPost, "/api/user/register", restHandler.HandleUserRegister)
 	restHandler.Register(r, http.MethodPost, "/api/user/login", restHandler.HandleUserLogin)
 
 	r.Group(func(r chi.Router) {
 		r.Use(restHandler.UserIdentity)
+		restHandler.Register(r, http.MethodPost, "/api/user/setStatus", restHandler.UserSetStatus)
+
 	})
 
 	// init GRPC server
