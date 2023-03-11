@@ -2,11 +2,11 @@ package repository
 
 const (
 	queryCreateTables = `	
-	CREATE TYPE status_names AS ENUM (
-			'MAN',
-			'AUT'
-	);
 	CREATE TYPE modes AS ENUM (
+    'MAN',
+    'AUT'
+	);
+	CREATE TYPE status_names AS ENUM (
 		'active',
 			'request to inactive',
 			'inactive',
@@ -23,13 +23,13 @@ const (
 	CREATE TABLE IF NOT EXISTS agents (
 			login VARCHAR(64) PRIMARY KEY,
 			password VARCHAR(128) NOT NULL,
-			status INT REFERENCES statuses(name),
+			status status_names REFERENCES statuses(name),
 			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 	);
 	CREATE TABLE IF NOT EXISTS transitions (
 			id SERIAL PRIMARY KEY,
-			source INT REFERENCES statuses(name),
-			destination int NOT NULL,
+			source status_names REFERENCES statuses(name),
+			destination status_names NOT NULL,
 			mode modes NOT NULL,
 		CONSTRAINT transitions_pk
 	PRIMARY KEY (source, destination, mode)
@@ -37,8 +37,8 @@ const (
 	CREATE TABLE IF NOT EXISTS transitions_log (
 			id SERIAL PRIMARY KEY,
 			agent_login VARCHAR(64) REFERENCES agents(login),
-			source INT REFERENCES statuses(name),
-			destination INT REFERENCES statuses(name),
+			source status_names REFERENCES statuses(name),
+			destination status_names REFERENCES statuses(name),
 			mode modes NOT NULL,
 			processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 	);INSERT INTO statuses (name, name_ru)

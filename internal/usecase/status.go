@@ -18,7 +18,7 @@ type Status interface {
 }
 
 type statusRepository interface {
-	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) error
+	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error)
 }
 
 func NewStatus(r statusRepository) *statusUsecase {
@@ -33,5 +33,7 @@ func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, m
 	// порядок важен, либо синхронно в транзакции,
 	// либо асинхронно со строгим порядком или с проверкой логов, не отправлять если состояние изменилось
 
-	return s.repo.AgentSetStatusTx(ctx, agent, mode)
+	_, err := s.repo.AgentSetStatusTx(ctx, agent, mode)
+
+	return err
 }
