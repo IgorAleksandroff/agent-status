@@ -4,13 +4,20 @@ import (
 	"context"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
+	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 )
 
 //go:generate mockery --name Status --with-expecter
 //go:generate mockery --name statusRepository --with-expecter
+//go:generate mockery --name statusSender --with-expecter
 
 type statusUsecase struct {
-	repo statusRepository
+	repo            statusRepository
+	externalCommand statusSender
+}
+
+type statusSender interface {
+	Send(cmd external_command.Base) error
 }
 
 type Status interface {
@@ -21,8 +28,11 @@ type statusRepository interface {
 	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error)
 }
 
-func NewStatus(r statusRepository) *statusUsecase {
-	return &statusUsecase{repo: r}
+func NewStatus(r statusRepository, s statusSender) *statusUsecase {
+	return &statusUsecase{
+		repo:            r,
+		externalCommand: s,
+	}
 }
 
 func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, mode entity.Mode) error {

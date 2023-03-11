@@ -15,11 +15,14 @@ const (
 
 	DataBaseAddressEnv     = "DATABASE_URI"
 	DataBaseAddressDefault = ""
+
+	QueueSizeDefault = 100
 )
 
 type (
 	config struct {
 		DataBaseURI string
+		QueueSize   int64
 		ServerConfig
 	}
 
@@ -37,6 +40,7 @@ func GetConfig() config {
 
 	cfg := config{
 		DataBaseURI: getEnvString(DataBaseAddressEnv, *DBFlag),
+		QueueSize:   QueueSizeDefault,
 		ServerConfig: ServerConfig{
 			Host:       getEnvString(ServerAddressEnv, *hostFlag),
 			GRPSSocket: getEnvString(ServerGRPSSocketEnv, *socketFlag),
