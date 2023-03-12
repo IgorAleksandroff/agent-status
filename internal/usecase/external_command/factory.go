@@ -9,19 +9,21 @@ import (
 )
 
 type factory struct {
-	repo commands.AutoAssignmentRepository
+	repo      commands.AutoAssignmentRepository
+	messenger commands.MessageSender
 }
 
-func NewFactory(repo commands.AutoAssignmentRepository) *factory {
+func NewFactory(msg commands.MessageSender, repo commands.AutoAssignmentRepository) *factory {
 	return &factory{
-		repo: repo,
+		repo:      repo,
+		messenger: msg,
 	}
 }
 
 func (f factory) GetCommandFromType(commandType entity.CommandType, params map[string]string) (Base, Executor, error) {
 	switch commandType {
 	case entity.SendMsg:
-		e := commands.NewSendMessageExecutor()
+		e := commands.NewSendMessageExecutor(f.messenger)
 		c, err := commands.NewSendMessage(params)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, fmt.Sprintf("failed to create command: %s", entity.SendMsg))

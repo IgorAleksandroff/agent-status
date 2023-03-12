@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
@@ -14,6 +15,10 @@ var (
 	_ external_command.Executor = (*sendMessageExecutor)(nil)
 )
 
+type MessageSender interface {
+	Send(msg string) error
+}
+
 type sendMessage struct {
 	Agent     string
 	Status    string
@@ -22,7 +27,7 @@ type sendMessage struct {
 }
 
 type sendMessageExecutor struct {
-	client string
+	client MessageSender
 }
 
 func NewSendMessage(params map[string]string) (*sendMessage, error) {
@@ -67,9 +72,9 @@ func (c sendMessage) Params() *map[string]string {
 	}
 }
 
-func NewSendMessageExecutor() *sendMessageExecutor {
+func NewSendMessageExecutor(client MessageSender) *sendMessageExecutor {
 	return &sendMessageExecutor{
-		client: "to be done",
+		client: client,
 	}
 }
 
@@ -78,9 +83,14 @@ func (e sendMessageExecutor) ValidityCheck(ctx context.Context, command external
 }
 
 func (e sendMessageExecutor) Execute(ctx context.Context, command external_command.Base) error {
-	// todo:
+	p := *command.Params()
 
-	return nil
+	return e.client.Send(fmt.Sprintf(
+		"Agent %s change status to %s at %s.",
+		p["login"],
+		p["status"],
+		p["changedAt"],
+	))
 }
 
 func (e sendMessageExecutor) Retry(ctx context.Context, command external_command.Base) bool {

@@ -35,7 +35,8 @@ func main() {
 
 	commandQueue := make(chan entity.Event, cfg.QueueSize)
 	commandSender := external_command.NewSender(commandQueue)
-	commandFactory := external_command.NewFactory(repo)
+	commandMessenger := usecase.NewMailSender(cfg.MessengerConfig)
+	commandFactory := external_command.NewFactory(commandMessenger, repo)
 	commandWorker := external_command.NewWorker(commandQueue, commandFactory)
 
 	statusUC := usecase.NewStatus(repo, commandSender)
