@@ -32,13 +32,15 @@ func main() {
 	}()
 
 	auth := usecase.NewAuthorization(repo)
-	// для прода надо использовать внешний брокер, который поддерживает несколько инстансов
-	commandQueue := make(chan entity.Command, cfg.QueueSize)
+
+	commandQueue := make(chan entity.Event, cfg.QueueSize)
 	commandSender := external_command.NewSender(commandQueue)
-	// todo executor
+	commandFactory := external_command.NewFactory()
+	commandWorker := external_command.NewWorker(commandQueue, commandFactory)
+
 	statusUC := usecase.NewStatus(repo, commandSender)
 
-	app, err := service.New(cfg.ServerConfig, auth, statusUC)
+	app, err := service.New(cfg.ServerConfig, auth, statusUC, commandWorker)
 	if err != nil {
 		log.Fatalf("failed to create: %s", err)
 	}

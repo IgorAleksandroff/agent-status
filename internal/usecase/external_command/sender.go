@@ -6,12 +6,17 @@ import (
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
 )
 
-type sender struct {
-	queue chan entity.Command
+type Base interface {
+	Type() entity.CommandType
+	Params() *map[string]string
 }
 
-func NewSender(q chan entity.Command) sender {
-	return sender{
+type sender struct {
+	queue chan entity.Event
+}
+
+func NewSender(q chan entity.Event) *sender {
+	return &sender{
 		queue: q,
 	}
 }
@@ -21,7 +26,7 @@ func (s sender) Send(c Base) error {
 		return errors.New("command is nil")
 	}
 
-	s.queue <- entity.Command{
+	s.queue <- entity.Event{
 		Type:   c.Type(),
 		Params: c.Params(),
 	}

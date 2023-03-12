@@ -7,7 +7,7 @@ const (
 	autoAssignment CommandType = "update auto-assignment"
 )
 
-type Command struct {
+type Event struct {
 	Type   CommandType
 	Params *map[string]string
 }

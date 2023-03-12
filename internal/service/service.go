@@ -8,9 +8,11 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/IgorAleksandroff/agent-status/internal/api"
+	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 	"github.com/go-chi/chi"
 	"google.golang.org/grpc"
 
@@ -24,14 +26,15 @@ const (
 	defaultShutdownTimeout = 3 * time.Second
 )
 
-type Server interface {
+type App interface {
 	Run(ctx context.Context)
 }
 
-type server struct {
+type app struct {
 	serverHTTP   *http.Server
 	serverGRPC   *grpc.Server
 	gRPCListener net.Listener
+	worker       *external_command.Worker
 }
 
 type gzipWriter struct {
@@ -39,7 +42,7 @@ type gzipWriter struct {
 	Writer io.Writer
 }
 
-func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Status) (*server, error) {
+func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Status, w *external_command.Worker) (*app, error) {
 	// init HTTP server
 	r := chi.NewRouter()
 
@@ -59,17 +62,18 @@ func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Sta
 
 	// init GRPC server
 
-	return &server{
+	return &app{
 		serverHTTP: &http.Server{
 			Handler:      r,
 			ReadTimeout:  defaultReadTimeout,
 			WriteTimeout: defaultWriteTimeout,
 			Addr:         cfg.Host,
 		},
+		worker: w,
 	}, nil
 }
 
-func (s server) Run(ctx context.Context) {
+func (s app) Run(ctx context.Context) {
 	notifyHTTP := make(chan error, 1)
 	go func() {
 		notifyHTTP <- s.serverHTTP.ListenAndServe()
@@ -80,6 +84,13 @@ func (s server) Run(ctx context.Context) {
 	go func() {
 		notifyGRPC <- s.serverGRPC.Serve(s.gRPCListener)
 		close(notifyGRPC)
+	}()
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		s.worker.Run(context.Background())
+		wg.Done()
 	}()
 
 	select {
@@ -97,9 +108,13 @@ func (s server) Run(ctx context.Context) {
 
 		s.shutdownHTTP()
 	}
+
+	s.worker.Shutdown()
+
+	wg.Wait()
 }
 
-func (s server) shutdownHTTP() {
+func (s app) shutdownHTTP() {
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
 	defer cancel()
 
