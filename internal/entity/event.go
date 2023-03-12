@@ -4,7 +4,7 @@ type CommandType string
 
 const (
 	SendMsg        CommandType = "send message"
-	autoAssignment CommandType = "update auto-assignment"
+	AutoAssignment CommandType = "update auto-assignment"
 )
 
 type Event struct {

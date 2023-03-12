@@ -73,17 +73,17 @@ func NewSendMessageExecutor() *sendMessageExecutor {
 	}
 }
 
-func (r sendMessageExecutor) ValidityCheck(ctx context.Context, command external_command.Base) bool {
+func (e sendMessageExecutor) ValidityCheck(ctx context.Context, command external_command.Base) bool {
 	return true
 }
 
-func (r sendMessageExecutor) Execute(ctx context.Context, command external_command.Base) error {
+func (e sendMessageExecutor) Execute(ctx context.Context, command external_command.Base) error {
 	// todo:
 
 	return nil
 }
 
-func (r sendMessageExecutor) Retry(ctx context.Context, command external_command.Base) bool {
+func (e sendMessageExecutor) Retry(ctx context.Context, command external_command.Base) bool {
 	p := *command.Params()
 	counter, ok := p["counter"]
 	if !ok {

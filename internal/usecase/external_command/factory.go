@@ -9,23 +9,33 @@ import (
 )
 
 type factory struct {
+	repo commands.AutoAssignmentRepository
 }
 
-func NewFactory() *factory {
-	return &factory{}
+func NewFactory(repo commands.AutoAssignmentRepository) *factory {
+	return &factory{
+		repo: repo,
+	}
 }
 
 func (f factory) GetCommandFromType(commandType entity.CommandType, params map[string]string) (Base, Executor, error) {
 	switch commandType {
 	case entity.SendMsg:
+		e := commands.NewSendMessageExecutor()
 		c, err := commands.NewSendMessage(params)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, fmt.Sprintf("failed to create command: %s", entity.SendMsg))
 		}
-
-		e := commands.NewSendMessageExecutor()
-
 		return c, e, nil
+
+	case entity.AutoAssignment:
+		e := commands.NewSendToAutoAssignmentExecutor(f.repo)
+		c, err := commands.NewSendToAutoAssignment(params)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, fmt.Sprintf("failed to create command: %s", entity.AutoAssignment))
+		}
+		return c, e, nil
+
 	default:
 		return nil, nil, errors.Errorf("not found suitable command: %s", commandType)
 	}

@@ -43,12 +43,26 @@ func NewStatus(r statusRepository, s statusSender) *statusUsecase {
 }
 
 func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, mode entity.Mode) error {
-	_, err := s.repo.AgentSetStatusTx(ctx, agent, mode)
+	logID, err := s.repo.AgentSetStatusTx(ctx, agent, mode)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	// отправка сообщений о начале и завершении смены, порядок не важен
+	if *agent.Status == entity.StatusActive || *agent.Status == entity.StatusInactive {
+		s.sendMessage(agent)
+	}
+
+	// отправка статусов в сервис автоназначения писем и диалогов
+	// с проверкой логов, не отправляется, если статус изменился
+	if logID != nil {
+		s.sendToAutoAssignment(agent, *logID)
+	}
+
+	return nil
+}
+
+func (s statusUsecase) sendMessage(agent entity.Agent) {
 	cmdMsg, err := commands.NewSendMessage(map[string]string{
 		"login":     agent.Login,
 		"status":    string(*agent.Status),
@@ -63,10 +77,21 @@ func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, m
 	if err != nil {
 		log.Printf("failed to send command: %+v", cmdMsg)
 	}
+}
 
-	// todo отправка статусов в сервис автоназначения писем и диалогов
-	// порядок важен, либо синхронно в транзакции,
-	// либо асинхронно со строгим порядком или с проверкой логов, не отправлять если состояние изменилось
+func (s statusUsecase) sendToAutoAssignment(agent entity.Agent, logID int64) {
+	cmdMsg, err := commands.NewSendMessage(map[string]string{
+		"login":   agent.Login,
+		"status":  string(*agent.Status),
+		"logID":   strconv.FormatInt(logID, 10),
+		"counter": strconv.FormatInt(maxRetries, 10),
+	})
+	if err != nil {
+		log.Println("failed to create command: update auto-assignment")
+	}
 
-	return nil
+	err = s.externalCommand.Send(cmdMsg)
+	if err != nil {
+		log.Printf("failed to send command: %+v", cmdMsg)
+	}
 }

@@ -4,9 +4,12 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"sync"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
 )
+
+const countOfWorkers = 3
 
 type Factory interface {
 	GetCommandFromType(commandType entity.CommandType, params map[string]string) (Base, Executor, error)
@@ -31,6 +34,19 @@ func NewWorker(q chan entity.Event, f Factory) *Worker {
 }
 
 func (w *Worker) Run(ctx context.Context) {
+	wg := &sync.WaitGroup{}
+
+	wg.Add(countOfWorkers)
+	for i := 0; i < countOfWorkers; i++ {
+		go func() {
+			w.run(ctx)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func (w *Worker) run(ctx context.Context) {
 	log.Println("worker: start")
 
 	for {
