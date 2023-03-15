@@ -20,7 +20,7 @@ func NewFactory(msg commands.MessageSender, repo commands.AutoAssignmentReposito
 	}
 }
 
-func (f factory) GetCommandFromType(commandType entity.CommandType, params map[string]string) (Base, Executor, error) {
+func (f factory) GetCommandFromType(commandType entity.CommandType, params map[string]string) (commands.Base, commands.Executor, error) {
 	switch commandType {
 	case entity.SendMsg:
 		e := commands.NewSendMessageExecutor(f.messenger)

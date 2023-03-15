@@ -6,13 +6,12 @@ import (
 	"strconv"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
-	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 	"github.com/pkg/errors"
 )
 
 var (
-	_ external_command.Base     = (*sendMessage)(nil)
-	_ external_command.Executor = (*sendMessageExecutor)(nil)
+	_ Base     = (*sendMessage)(nil)
+	_ Executor = (*sendMessageExecutor)(nil)
 )
 
 type MessageSender interface {
@@ -78,11 +77,11 @@ func NewSendMessageExecutor(client MessageSender) *sendMessageExecutor {
 	}
 }
 
-func (e sendMessageExecutor) ValidityCheck(ctx context.Context, command external_command.Base) bool {
+func (e sendMessageExecutor) ValidityCheck(ctx context.Context, command Base) bool {
 	return true
 }
 
-func (e sendMessageExecutor) Execute(ctx context.Context, command external_command.Base) error {
+func (e sendMessageExecutor) Execute(ctx context.Context, command Base) error {
 	p := *command.Params()
 
 	return e.client.Send(fmt.Sprintf(
@@ -93,7 +92,7 @@ func (e sendMessageExecutor) Execute(ctx context.Context, command external_comma
 	))
 }
 
-func (e sendMessageExecutor) Retry(ctx context.Context, command external_command.Base) bool {
+func (e sendMessageExecutor) Retry(ctx context.Context, command Base) bool {
 	p := *command.Params()
 	counter, ok := p["counter"]
 	if !ok {

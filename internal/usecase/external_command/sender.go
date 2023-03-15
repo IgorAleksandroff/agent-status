@@ -1,15 +1,11 @@
 package external_command
 
 import (
+	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command/commands"
 	"github.com/pkg/errors"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
 )
-
-type Base interface {
-	Type() entity.CommandType
-	Params() *map[string]string
-}
 
 type sender struct {
 	queue chan entity.Event
@@ -21,7 +17,7 @@ func NewSender(q chan entity.Event) *sender {
 	}
 }
 
-func (s sender) Send(c Base) error {
+func (s sender) Send(c commands.Base) error {
 	if c == nil {
 		return errors.New("command is nil")
 	}

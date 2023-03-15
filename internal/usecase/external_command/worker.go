@@ -7,18 +7,13 @@ import (
 	"sync"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
+	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command/commands"
 )
 
 const countOfWorkers = 3
 
 type Factory interface {
-	GetCommandFromType(commandType entity.CommandType, params map[string]string) (Base, Executor, error)
-}
-
-type Executor interface {
-	ValidityCheck(ctx context.Context, command Base) bool
-	Execute(ctx context.Context, command Base) error
-	Retry(ctx context.Context, command Base) bool
+	GetCommandFromType(commandType entity.CommandType, params map[string]string) (commands.Base, commands.Executor, error)
 }
 
 type Worker struct {

@@ -6,13 +6,12 @@ import (
 	"strconv"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
-	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 	"github.com/pkg/errors"
 )
 
 var (
-	_ external_command.Base     = (*sendMessage)(nil)
-	_ external_command.Executor = (*sendMessageExecutor)(nil)
+	_ Base     = (*sendMessage)(nil)
+	_ Executor = (*sendMessageExecutor)(nil)
 )
 
 type AutoAssignmentRepository interface {
@@ -80,7 +79,7 @@ func NewSendToAutoAssignmentExecutor(repo AutoAssignmentRepository) *sendToAutoA
 	}
 }
 
-func (e sendToAutoAssignmentExecutor) ValidityCheck(ctx context.Context, command external_command.Base) bool {
+func (e sendToAutoAssignmentExecutor) ValidityCheck(ctx context.Context, command Base) bool {
 	actualLogID, err := e.repo.GetLastLogIdForAgent(ctx, (*command.Params())["login"])
 	if err != nil {
 		log.Printf("failed to GetLastLogIdForAgent: %s", (*command.Params())["login"])
@@ -94,13 +93,13 @@ func (e sendToAutoAssignmentExecutor) ValidityCheck(ctx context.Context, command
 	return false
 }
 
-func (e sendToAutoAssignmentExecutor) Execute(ctx context.Context, command external_command.Base) error {
+func (e sendToAutoAssignmentExecutor) Execute(ctx context.Context, command Base) error {
 	// todo:
 
 	return nil
 }
 
-func (e sendToAutoAssignmentExecutor) Retry(ctx context.Context, command external_command.Base) bool {
+func (e sendToAutoAssignmentExecutor) Retry(ctx context.Context, command Base) bool {
 	p := *command.Params()
 	counter, ok := p["counter"]
 	if !ok {

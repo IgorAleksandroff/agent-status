@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
-	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command/commands"
 	"github.com/pkg/errors"
 )
@@ -15,27 +14,27 @@ import (
 const maxRetries = 2
 
 //go:generate mockery --name Status --with-expecter
-//go:generate mockery --name statusRepository --with-expecter
-//go:generate mockery --name statusSender --with-expecter
+//go:generate mockery --name StatusRepository --with-expecter
+//go:generate mockery --name StatusSender --with-expecter
 
 type statusUsecase struct {
-	repo            statusRepository
-	externalCommand statusSender
+	repo            StatusRepository
+	externalCommand StatusSender
 }
 
-type statusSender interface {
-	Send(cmd external_command.Base) error
+type StatusSender interface {
+	Send(cmd commands.Base) error
 }
 
 type Status interface {
 	AgentSetStatus(ctx context.Context, agent entity.Agent, mode entity.Mode) error
 }
 
-type statusRepository interface {
+type StatusRepository interface {
 	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error)
 }
 
-func NewStatus(r statusRepository, s statusSender) *statusUsecase {
+func NewStatus(r StatusRepository, s StatusSender) *statusUsecase {
 	return &statusUsecase{
 		repo:            r,
 		externalCommand: s,
