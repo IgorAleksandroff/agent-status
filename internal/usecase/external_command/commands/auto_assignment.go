@@ -15,7 +15,7 @@ var (
 )
 
 type AutoAssignmentRepository interface {
-	GetLastLogIdForAgent(ctx context.Context, login string) (*int64, error)
+	GetLastLogIdForAgent(ctx context.Context, login string) (int64, error)
 }
 
 type sendToAutoAssignment struct {
@@ -86,7 +86,7 @@ func (e sendToAutoAssignmentExecutor) ValidityCheck(ctx context.Context, command
 		return false
 	}
 
-	if actualLogID != nil && strconv.FormatInt(*actualLogID, 10) == (*command.Params())["logID"] {
+	if strconv.FormatInt(actualLogID, 10) == (*command.Params())["logID"] {
 		return true
 	}
 

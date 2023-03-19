@@ -31,7 +31,7 @@ type Status interface {
 }
 
 type StatusRepository interface {
-	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error)
+	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error)
 }
 
 func NewStatus(r StatusRepository, s StatusSender) *statusUsecase {
@@ -54,9 +54,7 @@ func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, m
 
 	// отправка статусов в сервис автоназначения писем и диалогов
 	// с проверкой логов, не отправляется, если статус изменился
-	if logID != nil {
-		s.sendToAutoAssignment(agent, *logID)
-	}
+	s.sendToAutoAssignment(agent, logID)
 
 	return nil
 }
@@ -79,7 +77,7 @@ func (s statusUsecase) sendMessage(agent entity.Agent) {
 }
 
 func (s statusUsecase) sendToAutoAssignment(agent entity.Agent, logID int64) {
-	cmdMsg, err := commands.NewSendMessage(map[string]string{
+	cmdMsg, err := commands.NewSendToAutoAssignment(map[string]string{
 		"login":   agent.Login,
 		"status":  string(*agent.Status),
 		"logID":   strconv.FormatInt(logID, 10),

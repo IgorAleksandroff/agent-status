@@ -32,14 +32,23 @@ func Test_statusUsecase_AgentSetStatus(t *testing.T) {
 		Status: &entityStatusInactive,
 	}
 	mode := entity.Rest
-	msg, err := commands.NewSendMessage(map[string]string{
+	msgMail, err := commands.NewSendMessage(map[string]string{
 		"login":     agent.Login,
 		"status":    string(*agent.Status),
 		"changedAt": time.Now().Format(time.RFC3339),
 		"counter":   strconv.FormatInt(2, 10),
 	})
 	if err != nil {
-		t.Errorf("failed to create command: send message")
+		t.Errorf("failed to create command: %v", err)
+	}
+	msgAssign, err := commands.NewSendToAutoAssignment(map[string]string{
+		"login":   agent.Login,
+		"status":  string(*agent.Status),
+		"logID":   strconv.FormatInt(1, 10),
+		"counter": strconv.FormatInt(2, 10),
+	})
+	if err != nil {
+		t.Errorf("failed to create command: send message: %v", err)
 	}
 
 	tests := []struct {
@@ -53,13 +62,14 @@ func Test_statusUsecase_AgentSetStatus(t *testing.T) {
 			fields: fields{
 				repo: func() usecase.StatusRepository {
 					mockRepo := &mocks.StatusRepository{}
-					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(nil, nil)
+					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(int64(1), nil)
 
 					return mockRepo
 				}(),
 				externalCommand: func() usecase.StatusSender {
 					mockSender := &mocks.StatusSender{}
-					mockSender.EXPECT().Send(msg).Return(nil)
+					mockSender.EXPECT().Send(msgMail).Return(nil).Once()
+					mockSender.EXPECT().Send(msgAssign).Return(nil).Once()
 
 					return mockSender
 				}(),
@@ -74,7 +84,7 @@ func Test_statusUsecase_AgentSetStatus(t *testing.T) {
 			fields: fields{
 				repo: func() usecase.StatusRepository {
 					mockRepo := &mocks.StatusRepository{}
-					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(nil, errors.New("repo error"))
+					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(0, errors.New("repo error"))
 
 					return mockRepo
 				}(),
@@ -89,13 +99,14 @@ func Test_statusUsecase_AgentSetStatus(t *testing.T) {
 			fields: fields{
 				repo: func() usecase.StatusRepository {
 					mockRepo := &mocks.StatusRepository{}
-					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(nil, nil)
+					mockRepo.EXPECT().AgentSetStatusTx(ctx, agent, mode).Return(1, nil)
 
 					return mockRepo
 				}(),
 				externalCommand: func() usecase.StatusSender {
 					mockSender := &mocks.StatusSender{}
-					mockSender.EXPECT().Send(msg).Return(errors.New("sender error"))
+					mockSender.EXPECT().Send(msgMail).Return(errors.New("sender error")).Once()
+					mockSender.EXPECT().Send(msgAssign).Return(nil).Once()
 
 					return mockSender
 				}(),

@@ -18,7 +18,7 @@ const (
 		ON CONFLICT (login) DO NOTHING`
 	queryGetUser = `SELECT login, password, status, created_at FROM agents WHERE login = $1`
 
-	queryLockForID     = `select pg_advisory_xact_lock($1)`
+	queryLockForID     = `SELECT pg_advisory_xact_lock($1)`
 	queryGetAgent      = `SELECT login, status FROM agents WHERE login = $1`
 	queryIsTransaction = `SELECT 1 FROM transitions WHERE source = $1 AND destination = $2 AND mode = $3`
 	queryUpdateAgent   = `UPDATE agents SET status = $2, WHERE login = $1`
@@ -36,12 +36,12 @@ var ErrUserRegister = errors.New("user already exist")
 func NewPostgres(ctx context.Context, addressDB string) (*pgRepo, error) {
 	db, err := sqlx.Connect("postgres", addressDB)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed postgres connect")
+		return nil, fmt.Errorf("failed postgres connect: %w", err)
 	}
 
 	repo := pgRepo{db: db}
 	if err = repo.init(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed postgres init")
+		return nil, fmt.Errorf("failed postgres init: %w", err)
 	}
 
 	return &repo, nil
@@ -95,8 +95,8 @@ func (p pgRepo) GetUser(ctx context.Context, login string) (entity.Agent, error)
 	return user, nil
 }
 
-func (p pgRepo) GetLastLogIdForAgent(ctx context.Context, login string) (*int64, error) {
-	var id *int64
+func (p pgRepo) GetLastLogIdForAgent(ctx context.Context, login string) (int64, error) {
+	var id int64
 
 	err := p.db.QueryRowContext(
 		ctx,
@@ -104,18 +104,18 @@ func (p pgRepo) GetLastLogIdForAgent(ctx context.Context, login string) (*int64,
 		login,
 	).Scan(&id)
 	if err != nil {
-		return nil, fmt.Errorf("error to GetLastLogIdForAgent: %w, %s", err, login)
+		return id, fmt.Errorf("error to GetLastLogIdForAgent: %w, %s", err, login)
 	}
 
 	return id, nil
 }
 
-func (p pgRepo) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error) {
-	var logID *int64
+func (p pgRepo) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error) {
+	var logID int64
 
 	tx, err := p.db.BeginTxx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return logID, errors.WithStack(err)
 	}
 
 	transaction := entity.Transition{
@@ -168,14 +168,14 @@ func (p pgRepo) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode e
 				log.Println("error rolling back a transaction:", rollbackErr)
 			}
 
-			return nil, errors.WithStack(err)
+			return logID, errors.WithStack(err)
 		}
 	}
 
 	return logID, errors.WithStack(tx.Commit())
 }
 
-func (p pgRepo) lockForUID(ctx context.Context, tx *sqlx.Tx, uid *int64) error {
+func (p pgRepo) lockForUID(ctx context.Context, tx *sqlx.Tx, uid int64) error {
 	if _, err := tx.ExecContext(ctx, queryLockForID, uid); err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (p pgRepo) isTransactions(ctx context.Context, tx *sqlx.Tx, tr entity.Trans
 		tr.Mode,
 	)
 	if errors.Is(row.Err(), sql.ErrNoRows) {
-		return errors.Errorf("invalid transaction - %+v", tr)
+		return fmt.Errorf("invalid transaction - %+v", tr)
 	}
 
 	return row.Err()
@@ -231,7 +231,7 @@ func (p pgRepo) setStatus(ctx context.Context, tx *sqlx.Tx, login string, status
 	return nil
 }
 
-func (p pgRepo) transactionLog(ctx context.Context, tx *sqlx.Tx, log entity.Logs) (*int64, error) {
+func (p pgRepo) transactionLog(ctx context.Context, tx *sqlx.Tx, log entity.Logs) (int64, error) {
 	var logID int64
 
 	err := tx.GetContext(ctx, &logID, queryLog,
@@ -241,21 +241,21 @@ func (p pgRepo) transactionLog(ctx context.Context, tx *sqlx.Tx, log entity.Logs
 		log.Mode,
 	)
 	if err != nil {
-		return nil, err
+		return logID, err
 	}
 
-	return &logID, nil
+	return logID, nil
 }
 
-func hash64(s string) (*int64, error) {
+func hash64(s string) (int64, error) {
 	h := fnv.New64()
 
 	_, err := h.Write([]byte(s))
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	v := int64(h.Sum64())
 
-	return &v, nil
+	return v, nil
 }

@@ -80,7 +80,7 @@ func (h *handler) HandleUserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.auth.GenerateToken(ctx, newUser.Login, newUser.Password)
+	token, err := h.auth.GenerateToken(ctx, newUser.Login, *newUser.Password)
 	if err != nil {
 		log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -112,7 +112,7 @@ func (h *handler) HandleUserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.auth.GenerateToken(ctx, user.Login, user.Password)
+	token, err := h.auth.GenerateToken(ctx, user.Login, *user.Password)
 	if err != nil {
 		errLogin := errors.Is(err, usecase.ErrUserLogin)
 		if errLogin {

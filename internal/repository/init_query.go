@@ -27,9 +27,8 @@ const (
 			created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 	);
 	CREATE TABLE IF NOT EXISTS transitions (
-			id SERIAL PRIMARY KEY,
 			source status_names REFERENCES statuses(name),
-			destination status_names NOT NULL,
+			destination status_names REFERENCES statuses(name),
 			mode modes NOT NULL,
 		CONSTRAINT transitions_pk
 	PRIMARY KEY (source, destination, mode)
@@ -41,7 +40,8 @@ const (
 			destination status_names REFERENCES statuses(name),
 			mode modes NOT NULL,
 			processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-	);INSERT INTO statuses (name, name_ru)
+	);
+	INSERT INTO statuses (name, name_ru)
 	VALUES ('active', 'начало смены'),
 			('request to inactive', 'запрос на завершение смены'),
 			('inactive', 'завершение смены'),

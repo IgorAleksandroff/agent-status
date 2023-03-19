@@ -5,7 +5,6 @@ import (
 
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
 	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command/commands"
-	"github.com/pkg/errors"
 )
 
 type factory struct {
@@ -26,7 +25,7 @@ func (f factory) GetCommandFromType(commandType entity.CommandType, params map[s
 		e := commands.NewSendMessageExecutor(f.messenger)
 		c, err := commands.NewSendMessage(params)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, fmt.Sprintf("failed to create command: %s", entity.SendMsg))
+			return nil, nil, fmt.Errorf("failed to create command- %s: %w", entity.SendMsg, err)
 		}
 		return c, e, nil
 
@@ -34,11 +33,11 @@ func (f factory) GetCommandFromType(commandType entity.CommandType, params map[s
 		e := commands.NewSendToAutoAssignmentExecutor(f.repo)
 		c, err := commands.NewSendToAutoAssignment(params)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, fmt.Sprintf("failed to create command: %s", entity.AutoAssignment))
+			return nil, nil, fmt.Errorf("failed to create command- %s: %w", entity.AutoAssignment, err)
 		}
 		return c, e, nil
 
 	default:
-		return nil, nil, errors.Errorf("not found suitable command: %s", commandType)
+		return nil, nil, fmt.Errorf("not found suitable command: %s", commandType)
 	}
 }

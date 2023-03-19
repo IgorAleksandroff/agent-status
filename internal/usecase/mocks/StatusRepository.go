@@ -23,16 +23,14 @@ func (_m *StatusRepository) EXPECT() *StatusRepository_Expecter {
 }
 
 // AgentSetStatusTx provides a mock function with given fields: ctx, agent, mode
-func (_m *StatusRepository) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (*int64, error) {
+func (_m *StatusRepository) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error) {
 	ret := _m.Called(ctx, agent, mode)
 
-	var r0 *int64
-	if rf, ok := ret.Get(0).(func(context.Context, entity.Agent, entity.Mode) *int64); ok {
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, entity.Agent, entity.Mode) int64); ok {
 		r0 = rf(ctx, agent, mode)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*int64)
-		}
+		r0 = ret.Get(0).(int64)
 	}
 
 	var r1 error
@@ -65,7 +63,7 @@ func (_c *StatusRepository_AgentSetStatusTx_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *StatusRepository_AgentSetStatusTx_Call) Return(_a0 *int64, _a1 error) *StatusRepository_AgentSetStatusTx_Call {
+func (_c *StatusRepository_AgentSetStatusTx_Call) Return(_a0 int64, _a1 error) *StatusRepository_AgentSetStatusTx_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
