@@ -29,11 +29,13 @@ type StatusSender interface {
 type Status interface {
 	AgentSetStatus(ctx context.Context, agent entity.Agent, mode entity.Mode) error
 	GetUser(ctx context.Context, login string) (entity.Agent, error)
+	GetLogsForAgent(ctx context.Context, login string) ([]entity.Logs, error)
 }
 
 type StatusRepository interface {
 	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error)
 	GetUser(ctx context.Context, login string) (entity.Agent, error)
+	GetLogsForAgent(ctx context.Context, login string) ([]entity.Logs, error)
 }
 
 func NewStatus(r StatusRepository, s StatusSender) *statusUsecase {
@@ -59,6 +61,14 @@ func (s statusUsecase) AgentSetStatus(ctx context.Context, agent entity.Agent, m
 	s.sendToAutoAssignment(agent, logID)
 
 	return nil
+}
+
+func (s statusUsecase) GetUser(ctx context.Context, login string) (entity.Agent, error) {
+	return s.repo.GetUser(ctx, login)
+}
+
+func (s statusUsecase) GetLogsForAgent(ctx context.Context, login string) ([]entity.Logs, error) {
+	return s.repo.GetLogsForAgent(ctx, login)
 }
 
 func (s statusUsecase) sendMessage(agent entity.Agent) {
