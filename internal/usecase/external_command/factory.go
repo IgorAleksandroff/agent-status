@@ -8,14 +8,16 @@ import (
 )
 
 type factory struct {
-	repo      commands.AutoAssignmentRepository
-	messenger commands.MessageSender
+	repo         commands.AutoAssignmentRepository
+	messenger    commands.MessageSender
+	statusSender commands.StatusSender
 }
 
-func NewFactory(msg commands.MessageSender, repo commands.AutoAssignmentRepository) *factory {
+func NewFactory(msg commands.MessageSender, repo commands.AutoAssignmentRepository, statusSender commands.StatusSender) *factory {
 	return &factory{
-		repo:      repo,
-		messenger: msg,
+		repo:         repo,
+		messenger:    msg,
+		statusSender: statusSender,
 	}
 }
 
@@ -30,7 +32,7 @@ func (f factory) GetCommandFromType(commandType entity.CommandType, params map[s
 		return c, e, nil
 
 	case entity.AutoAssignment:
-		e := commands.NewSendToAutoAssignmentExecutor(f.repo)
+		e := commands.NewSendToAutoAssignmentExecutor(f.repo, f.statusSender)
 		c, err := commands.NewSendToAutoAssignment(params)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create command- %s: %w", entity.AutoAssignment, err)

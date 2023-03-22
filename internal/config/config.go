@@ -22,13 +22,17 @@ const (
 	MailFromEnv     = "MAIL_FROM"
 	MailToEnv       = "MAIL_TO"
 
+	AutoAssigmentGRPSSocketEnv     = "GRPS_SOCKET"
+	DefaultAutoAssigmentGRPSSocket = ":3220"
+
 	QueueSizeDefault = 100
 )
 
 type (
 	config struct {
-		DataBaseURI string
-		QueueSize   int64
+		DataBaseURI             string
+		QueueSize               int64
+		AutoAssigmentGRPSSocket string
 		ServerConfig
 		MessengerConfig
 	}
@@ -53,11 +57,13 @@ func GetConfig() config {
 	mailPwdFlag := flag.String("p", "", "пароль от почтового ящика")
 	mailFromFlag := flag.String("f", "", "почтовый ящик отправителя")
 	mailToFlag := flag.String("t", "", "почтовый ящик получателя")
+	autoAssigmentSocketFlag := flag.String("s", DefaultAutoAssigmentGRPSSocket, "gRPC сервер:порт")
 	flag.Parse()
 
 	cfg := config{
-		DataBaseURI: getEnvString(DataBaseAddressEnv, *DBFlag),
-		QueueSize:   QueueSizeDefault,
+		DataBaseURI:             getEnvString(DataBaseAddressEnv, *DBFlag),
+		QueueSize:               QueueSizeDefault,
+		AutoAssigmentGRPSSocket: getEnvString(AutoAssigmentGRPSSocketEnv, *autoAssigmentSocketFlag),
 		ServerConfig: ServerConfig{
 			Host:       getEnvString(ServerAddressEnv, *hostFlag),
 			GRPSSocket: getEnvString(ServerGRPSSocketEnv, *socketFlag),

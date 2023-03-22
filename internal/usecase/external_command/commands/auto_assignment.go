@@ -18,6 +18,10 @@ type AutoAssignmentRepository interface {
 	GetLastLogIdForAgent(ctx context.Context, login string) (int64, error)
 }
 
+type StatusSender interface {
+	Send(ctx context.Context, login, status string) error
+}
+
 type sendToAutoAssignment struct {
 	Agent   string
 	Status  string
@@ -27,7 +31,7 @@ type sendToAutoAssignment struct {
 
 type sendToAutoAssignmentExecutor struct {
 	repo   AutoAssignmentRepository
-	client string
+	client StatusSender
 }
 
 func NewSendToAutoAssignment(params map[string]string) (*sendToAutoAssignment, error) {
@@ -72,10 +76,10 @@ func (c sendToAutoAssignment) Params() *map[string]string {
 	}
 }
 
-func NewSendToAutoAssignmentExecutor(repo AutoAssignmentRepository) *sendToAutoAssignmentExecutor {
+func NewSendToAutoAssignmentExecutor(repo AutoAssignmentRepository, client StatusSender) *sendToAutoAssignmentExecutor {
 	return &sendToAutoAssignmentExecutor{
 		repo:   repo,
-		client: "to be done",
+		client: client,
 	}
 }
 
@@ -94,9 +98,9 @@ func (e sendToAutoAssignmentExecutor) ValidityCheck(ctx context.Context, command
 }
 
 func (e sendToAutoAssignmentExecutor) Execute(ctx context.Context, command Base) error {
-	// todo:
+	p := *command.Params()
 
-	return nil
+	return e.client.Send(ctx, p["login"], p["status"])
 }
 
 func (e sendToAutoAssignmentExecutor) Retry(ctx context.Context, command Base) bool {

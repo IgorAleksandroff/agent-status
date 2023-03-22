@@ -28,10 +28,12 @@ type StatusSender interface {
 
 type Status interface {
 	AgentSetStatus(ctx context.Context, agent entity.Agent, mode entity.Mode) error
+	GetUser(ctx context.Context, login string) (entity.Agent, error)
 }
 
 type StatusRepository interface {
 	AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error)
+	GetUser(ctx context.Context, login string) (entity.Agent, error)
 }
 
 func NewStatus(r StatusRepository, s StatusSender) *statusUsecase {

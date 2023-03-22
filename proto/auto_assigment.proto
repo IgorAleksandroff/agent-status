@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package clients;
+
+option go_package = "internal/generated/rpc/clients";
+
+service AutoAssigment {
+  rpc userChangeStatus(ChangeRequest) returns (UserChangeStatusResponse);
+}
+
+message ChangeRequest {
+  Agent user = 1;
+}
+
+message UserChangeStatusResponse {}
+
+message Agent {
+  string login = 1;
+  Statuses status = 2;
+
+  enum Statuses {
+    ACTIVE = 0;
+    REQ_INACTIVE = 1;
+    INACTIVE = 2;
+    REQ_BREAK = 3;
+    BREAK = 4;
+    FORCE_MAJEURE = 5;
+    CHAT = 6;
+    LETTER = 7;
+  }
+}

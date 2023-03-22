@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/IgorAleksandroff/agent-status/internal/clients"
 	"github.com/IgorAleksandroff/agent-status/internal/config"
 	"github.com/IgorAleksandroff/agent-status/internal/entity"
 	"github.com/IgorAleksandroff/agent-status/internal/repository"
@@ -33,10 +34,16 @@ func main() {
 
 	auth := usecase.NewAuthorization(repo)
 
+	clientAutoAssigment, err := clients.NewGRPCAutoAssigment(cfg.AutoAssigmentGRPSSocket)
+	if err != nil {
+		log.Fatalf("failed to connect: %s", err)
+	}
+	defer clientAutoAssigment.Close()
+
 	commandQueue := make(chan entity.Event, cfg.QueueSize)
 	commandSender := external_command.NewSender(commandQueue)
 	commandMessenger := usecase.NewMailSender(cfg.MessengerConfig)
-	commandFactory := external_command.NewFactory(commandMessenger, repo)
+	commandFactory := external_command.NewFactory(commandMessenger, repo, clientAutoAssigment)
 	commandWorker := external_command.NewWorker(commandQueue, commandFactory)
 
 	statusUC := usecase.NewStatus(repo, commandSender)
