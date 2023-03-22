@@ -61,6 +61,98 @@ func (_c *Status_AgentSetStatus_Call) Return(_a0 error) *Status_AgentSetStatus_C
 	return _c
 }
 
+// GetLogsForAgent provides a mock function with given fields: ctx, login
+func (_m *Status) GetLogsForAgent(ctx context.Context, login string) ([]entity.Logs, error) {
+	ret := _m.Called(ctx, login)
+
+	var r0 []entity.Logs
+	if rf, ok := ret.Get(0).(func(context.Context, string) []entity.Logs); ok {
+		r0 = rf(ctx, login)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.Logs)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, login)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Status_GetLogsForAgent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLogsForAgent'
+type Status_GetLogsForAgent_Call struct {
+	*mock.Call
+}
+
+// GetLogsForAgent is a helper method to define mock.On call
+//   - ctx context.Context
+//   - login string
+func (_e *Status_Expecter) GetLogsForAgent(ctx interface{}, login interface{}) *Status_GetLogsForAgent_Call {
+	return &Status_GetLogsForAgent_Call{Call: _e.mock.On("GetLogsForAgent", ctx, login)}
+}
+
+func (_c *Status_GetLogsForAgent_Call) Run(run func(ctx context.Context, login string)) *Status_GetLogsForAgent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Status_GetLogsForAgent_Call) Return(_a0 []entity.Logs, _a1 error) *Status_GetLogsForAgent_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// GetUser provides a mock function with given fields: ctx, login
+func (_m *Status) GetUser(ctx context.Context, login string) (entity.Agent, error) {
+	ret := _m.Called(ctx, login)
+
+	var r0 entity.Agent
+	if rf, ok := ret.Get(0).(func(context.Context, string) entity.Agent); ok {
+		r0 = rf(ctx, login)
+	} else {
+		r0 = ret.Get(0).(entity.Agent)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, login)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Status_GetUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUser'
+type Status_GetUser_Call struct {
+	*mock.Call
+}
+
+// GetUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - login string
+func (_e *Status_Expecter) GetUser(ctx interface{}, login interface{}) *Status_GetUser_Call {
+	return &Status_GetUser_Call{Call: _e.mock.On("GetUser", ctx, login)}
+}
+
+func (_c *Status_GetUser_Call) Run(run func(ctx context.Context, login string)) *Status_GetUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Status_GetUser_Call) Return(_a0 entity.Agent, _a1 error) *Status_GetUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
 type mockConstructorTestingTNewStatus interface {
 	mock.TestingT
 	Cleanup(func())

@@ -25,6 +25,7 @@ const (
 	queryLog           = `INSERT INTO transitions_log (agent_login, source, destination, mode) VALUES ($1, $2, $3, $4)
 		returning id`
 	queryGetLastLogIdForAgent = `SELECT id FROM transitions_log WHERE login = $1 ORDER BY id DESC limit 1`
+	queryGetLogsByAgent       = `SELECT agent_login, source, destination, mode, processed_at FROM transitions_log WHERE login = $1`
 )
 
 type pgRepo struct {
@@ -108,6 +109,13 @@ func (p pgRepo) GetLastLogIdForAgent(ctx context.Context, login string) (int64, 
 	}
 
 	return id, nil
+}
+
+func (p pgRepo) GetLogsForAgent(ctx context.Context, login string) ([]entity.Logs, error) {
+	result := make([]entity.Logs, 0)
+	err := p.db.SelectContext(ctx, &result, queryGetLogsByAgent, login)
+
+	return result, err
 }
 
 func (p pgRepo) AgentSetStatusTx(ctx context.Context, agent entity.Agent, mode entity.Mode) (int64, error) {

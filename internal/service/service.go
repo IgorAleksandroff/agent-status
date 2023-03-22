@@ -11,13 +11,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/IgorAleksandroff/agent-status/internal/api"
-	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 	"github.com/go-chi/chi"
 	"google.golang.org/grpc"
 
+	"github.com/IgorAleksandroff/agent-status/internal/api"
 	"github.com/IgorAleksandroff/agent-status/internal/config"
+	"github.com/IgorAleksandroff/agent-status/internal/generated/rpc"
+	"github.com/IgorAleksandroff/agent-status/internal/grpchandlers"
 	"github.com/IgorAleksandroff/agent-status/internal/usecase"
+	"github.com/IgorAleksandroff/agent-status/internal/usecase/external_command"
 )
 
 const (
@@ -57,10 +59,19 @@ func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Sta
 	r.Group(func(r chi.Router) {
 		r.Use(restHandler.UserIdentity)
 		restHandler.Register(r, http.MethodPost, "/api/user/setStatus", restHandler.UserSetStatus)
-
+		restHandler.Register(r, http.MethodGet, "/api/user/getStatus", restHandler.UserGetStatus)
 	})
 
 	// init GRPC server
+	listen, err := net.Listen("tcp", cfg.GRPSSocket)
+	if err != nil {
+		return nil, err
+	}
+
+	s := grpc.NewServer()
+	metricGRPCHandler := grpchandlers.New(status)
+
+	rpc.RegisterAgentStatusServer(s, metricGRPCHandler)
 
 	return &app{
 		serverHTTP: &http.Server{
@@ -69,7 +80,9 @@ func New(cfg config.ServerConfig, auth usecase.Authorization, status usecase.Sta
 			WriteTimeout: defaultWriteTimeout,
 			Addr:         cfg.Host,
 		},
-		worker: w,
+		serverGRPC:   s,
+		gRPCListener: listen,
+		worker:       w,
 	}, nil
 }
 
